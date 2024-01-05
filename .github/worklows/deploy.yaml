@@ -1,0 +1,96 @@
+name: Terraform Static Validations
+env:
+  TERRAFORM_VERSION: '1.6.6'
+  TFLINT_VERSION: '0.50.0'
+  TFSEC_VERSION: '1.28.4'
+
+  AWS_REGION: 'ap-southeast-2'
+  AWS_ACCOUNT_ID: '654654301181'
+  AWS_OIDC_ROLE: 'arn:aws:iam::654654301181:role/github-action-blueprint-role-ap-southeast-2'
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        default: Debigging...
+        description: "Running workflow manually"
+  push:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+jobs:
+  main:
+    name: main
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_OIDC_ROLE }}
+          role-session-name: GitHubActionBlueprints
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false          
+
+      - name: Terraform Validation
+        run: make validate
+
+      - name: Terraform Format Check
+        run: make fmt
+
+      # - name: Install tflint
+      #   run: |
+      #     curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      #     tflint --version
+
+      - name: Install tflint
+        run: |
+          curl -o tflint.zip -sL https://github.com/terraform-linters/tflint/releases/download/v${{ env.TFLINT_VERSION }}/tflint_linux_amd64.zip
+          unzip tflint.zip -d /usr/local/bin
+          chmod +x /usr/local/bin/tflint
+          tflint --version
+
+      - name: Run tflint
+        run: make tflint
+
+      - name: Install tfsec
+        run: |
+          curl -o tfsec -SLf https://github.com/aquasecurity/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-amd64
+          sudo mv tfsec /usr/local/bin
+          chmod +x /usr/local/bin/tfsec
+          tfsec --version
+
+      - name: Run tfsec
+        run: make tfsec
+
+      - name: Run plan
+        run: make plan
+
+
