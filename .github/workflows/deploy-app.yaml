@@ -36,12 +36,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
+      - name: AWS OIDC Provider
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ env.AWS_OIDC_ROLE }}
-          role-session-name: github-action-app1
+          role-session-name: github-actions-app
 
       - name: Sts GetCallerIdentity
         run: aws sts get-caller-identity
