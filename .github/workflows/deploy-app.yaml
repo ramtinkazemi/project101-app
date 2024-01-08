@@ -2,11 +2,12 @@ name: Deploy app1
 
 env:
   AWS_REGION: 'ap-southeast-2'
-  AWS_ACCOUNT_ID: '590183968070'
-  AWS_OIDC_ROLE: 'arn:aws:iam::590183968070:role/github-action-app-role-ap-southeast-2'
+  AWS_ACCOUNT_ID: '211125726495'
+  AWS_OIDC_ROLE: 'arn:aws:iam::211125726495:role/github-action-app-role-ap-southeast-2'
   
   ROLLBACK: 'false'
   DESTROY: 'false'
+  RELEASE_BRANCH: 'main'
 
 on:
   workflow_dispatch:
@@ -14,12 +15,6 @@ on:
       name:
         default: Debigging...
         description: "Running workflow manually"
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
 
 permissions:
   id-token: write
@@ -53,12 +48,12 @@ jobs:
 
       - name: Deploy App
         run: make deploy
-        if: ${{ env.DESTROY == 'false' && env.ROLLBACK == 'false' }}
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'false' && env.ROLLBACK == 'false' }}
 
       - name: Rollback App
         run: make rollback
-        if: ${{ env.DESTROY == 'false' && env.ROLLBACK == 'true' }}
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'false' && env.ROLLBACK == 'true' }}
 
       - name: Destroy App
         run: make destroy
-        if: ${{ env.DESTROY == 'true' }}
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'true' }}
