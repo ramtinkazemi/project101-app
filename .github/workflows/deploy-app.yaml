@@ -9,6 +9,13 @@ env:
   DESTROY: 'false'
   RELEASE_BRANCH: 'main'
 
+  APP_NAME: 'app1'
+  APP_K8S_NAMESPACE: 'app1'
+  CLUSTER_NAME: 'app1-non-prod-eks-cluster'
+  ECR_REPO: 'app1-non-prod-app-ecr'
+  IMAGE_TAG: 'latest'
+  CDN_URL: 'https://https://d8uy9k98wkbih.cloudfront.net'
+
 on:
   workflow_dispatch:
     inputs:
