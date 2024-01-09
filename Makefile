@@ -35,15 +35,15 @@ deploy: kube-config
 	@echo "Deploying ..."
 	@./bin/render.sh app.yaml app.vars > app-rendered.yaml
 	@kubectl apply -f app-rendered.yaml
-	@kubectl rollout status deployment/$(APP_NAME)
+	@kubectl rollout status deployment $(APP_NAME) -n $(APP_K8S_NAMESPACE)
 
 destroy: kube-config
 	@echo "Destroying ..."
 	@./bin/render.sh app.yaml app.vars > app-rendered.yaml
 	@kubectl delete -f app-rendered.yaml
-	@kubectl rollout status deployment/$(APP_NAME) -n $(APP_K8S_NAMESPACE)
+	@kubectl rollout status deployment $(APP_NAME) -n $(APP_K8S_NAMESPACE)
 
 rollback: kube-config
 	@echo "Reverting the last deployment..."
-	@kubectl rollout undo deployment/$(APP_NAME)
-	@kubectl rollout status deployment/$(APP_NAME) -n $(APP_K8S_NAMESPACE)
+	@kubectl rollout undo deployment $(APP_NAME) -n $(APP_K8S_NAMESPACE)
+	@kubectl rollout status deployment $(APP_NAME) -n $(APP_K8S_NAMESPACE)
