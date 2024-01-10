@@ -1,0 +1,50 @@
+Name:                   aws-load-balancer-controller
+Namespace:              kube-system
+CreationTimestamp:      Fri, 05 Jan 2024 17:01:52 +0000
+Labels:                 app.kubernetes.io/instance=aws-load-balancer-controller
+                        app.kubernetes.io/managed-by=Helm
+                        app.kubernetes.io/name=aws-load-balancer-controller
+                        app.kubernetes.io/version=v2.6.2
+                        helm.sh/chart=aws-load-balancer-controller-1.6.2
+Annotations:            deployment.kubernetes.io/revision: 1
+                        meta.helm.sh/release-name: aws-load-balancer-controller
+                        meta.helm.sh/release-namespace: kube-system
+Selector:               app.kubernetes.io/instance=aws-load-balancer-controller,app.kubernetes.io/name=aws-load-balancer-controller
+Replicas:               2 desired | 2 updated | 2 total | 0 available | 2 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           app.kubernetes.io/instance=aws-load-balancer-controller
+                    app.kubernetes.io/name=aws-load-balancer-controller
+  Annotations:      prometheus.io/port: 8080
+                    prometheus.io/scrape: true
+  Service Account:  aws-load-balancer-controller
+  Containers:
+   aws-load-balancer-controller:
+    Image:       public.ecr.aws/eks/aws-load-balancer-controller:v2.6.2
+    Ports:       9443/TCP, 8080/TCP
+    Host Ports:  0/TCP, 0/TCP
+    Args:
+      --cluster-name=app1
+      --ingress-class=alb
+      --aws-region=ap-southeast-2
+      --aws-vpc-id=vpc-0cc7601b661528e6a
+    Liveness:     http-get http://:61779/healthz delay=30s timeout=10s period=10s #success=1 #failure=2
+    Environment:  <none>
+    Mounts:
+      /tmp/k8s-webhook-server/serving-certs from cert (ro)
+  Volumes:
+   cert:
+    Type:               Secret (a volume populated by a Secret)
+    SecretName:         aws-load-balancer-tls
+    Optional:           false
+  Priority Class Name:  system-cluster-critical
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Progressing    True    NewReplicaSetAvailable
+  Available      False   MinimumReplicasUnavailable
+OldReplicaSets:  <none>
+NewReplicaSet:   aws-load-balancer-controller-5b69dfdff8 (2/2 replicas created)
+Events:          <none>

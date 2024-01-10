@@ -12,10 +12,13 @@ This repository in the project focuses on building, deploying, and managing a we
 - `destroy`: Removes the application deployment from the EKS cluster.
 - `rollback`: Reverts the application to the previous deployment state in case of deployment issues.
 
-## Usage
+## Setup Local Developer Environment
 
-1. Set AWS credentials and region environment variables (`AWS_REGION`, `AWS_ACCOUNT_ID`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
-2. Define Docker and Kubernetes configurations in environment variables (`ECR_REPO`, `IMAGE_TAG`, `CLUSTER_NAME`, `APP_NAME`, `APP_K8S_NAMESPACE`).
+1. Make sure your terminal session has AWS credentials set. Use STS termprary credentials provide by AWS SSO for this purpose if can. You may use the following command to check your AWS identity:
+   ```bash
+   make aws-check
+   ```
+2. Visit **.env.loca** and **app.vars** and make necessary adjustments.
 3. Use Makefile commands to manage the application lifecycle on EKS:
    - Start with `make check-aws`.
    - Build and push the Docker image using `make build`.
@@ -30,4 +33,4 @@ This repository in the project focuses on building, deploying, and managing a we
 ## Notes
 
 - The repository is intended for managing the application in the EKS environment.
-- The `./bin/render.sh` script is used to render Kubernetes manifests with environment-specific variables.
+- The `./bin/render.sh` script is used to render Kubernetes manifests with variables in **app.vars**.
