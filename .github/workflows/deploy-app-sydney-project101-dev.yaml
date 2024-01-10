@@ -1,0 +1,66 @@
+name: deploy-app-sydney-project101-dev
+
+env:
+  AWS_REGION: 'ap-southeast-2'
+  AWS_ACCOUNT_ID: '211125726495'
+  AWS_OIDC_ROLE: 'arn:aws:iam::211125726495:role/proj101-app-dev-gha-oidc-role-ap-southeast-2'
+  
+  ROLLBACK: 'false'
+  DESTROY: 'false'
+  RELEASE_BRANCH: 'main'
+
+  APP_NAME: 'app'
+  K8S_NAMESPACE: 'proj101-dev-app'
+  CLUSTER_NAME: 'proj101-dev-eks'
+  ECR_REPO: 'proj101-dev-app-ecr'
+  DOCKER_IMAGE_TAG: 'latest'
+  CDN_URL: 'https://d1ft4gmnmkbewu.cloudfront.net'
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        default: <reason-for-manual-run>
+        description: Manual Run
+
+permissions:
+  id-token: write
+  contents: read 
+
+jobs:
+  main:
+    name: main
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: AWS OIDC Provider
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_OIDC_ROLE }}
+          role-session-name: github-actions-app
+
+      - name: Build Docker Image
+        run: make build
+
+      - name: Scan Docker Image
+        run: make scan
+
+      - name: Deploy App
+        run: make deploy
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'false' && env.ROLLBACK == 'false' }}
+
+      - name: Rollback App
+        run: make rollback
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'false' && env.ROLLBACK == 'true' }}
+
+      - name: Destroy App
+        run: make destroy
+        if: ${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) && env.DESTROY == 'true' }}

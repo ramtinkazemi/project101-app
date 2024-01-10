@@ -3,8 +3,8 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/app"
   config.ssh.forward_agent = true
   config.vm.provision "shell", inline: <<-SHELL
-      . .env.local
-          
+      . .env.vagrant
+        
       # Update and install dependencies
       sudo apt update
       sudo apt install -y git curl unzip apt-transport-https gnupg lsb-release software-properties-common
@@ -39,7 +39,6 @@ Vagrant.configure("2") do |config|
       sudo mv /tmp/eksctl /usr/local/bin && rm eksctl.tar.gz
       
       # Install Terraform
-      TERRAFORM_VERSION="1.6.6"
       curl -o terraform.zip -SLf https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
       unzip terraform.zip 
       mv terraform /usr/local/bin/ 
@@ -47,51 +46,52 @@ Vagrant.configure("2") do |config|
       echo 'alias tf=terraform' >> /home/vagrant/.bashrc
 
       # Install tflint
-      TFLINT_VERSION="0.50.0"
-      curl -o tflint.zip -SLf https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip
+      curl -o tflint.zip -SLf https://github.com/terraform-linters/tflint/releases/download/${TFLINT_VERSION}/tflint_linux_amd64.zip
       unzip tflint.zip 
       sudo mv tflint /usr/local/bin/ 
       tflint --version 
       rm tflint.zip
 
       # Install tfsec
-      TFSEC_VERSION="1.28.4"
-      curl -o tfsec -SLf https://github.com/aquasecurity/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-amd64
+      curl -o tfsec -SLf https://github.com/aquasecurity/tfsec/releases/download/${TFSEC_VERSION}/tfsec-linux-amd64
       chmod +x tfsec
       mv tfsec /usr/local/bin/
       tfsec --version
 
       # Install Terragrunt
-      TERRAGRUNT_VERSION="0.54.11"
-      curl -o terragrunt -SLf https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64
+      curl -o terragrunt -SLf https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64
       chmod +x terragrunt
       sudo mv terragrunt /usr/local/bin/
       echo 'alias tg=terragrunt' >> /home/vagrant/.bashrc
 
+      # Install Docker
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      sudo apt update
+      sudo apt install -y docker-ce docker-ce-cli containerd.io
+      sudo usermod -aG docker $USER
+
       # Install kubectl
-      KUBECTL_VERSION="1.28.0"
-      curl -o kubectl -SLf "https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+      curl -o kubectl -SLf "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
       chmod +x ./kubectl
       sudo mv ./kubectl /usr/local/bin/kubectl
       kubectl completion  >> /home/vagrant/.bashrc
       echo 'alias k=kubectl' >> /home/vagrant/.bashrc
 
       # Install Helm
-      HELM_VERSION="3.13.3"
-      curl -o helm.tar.gz -SLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+      curl -o helm.tar.gz -SLf https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
       tar -zxvf helm.tar.gz -C /tmp
       sudo mv /tmp/linux-amd64/helm /usr/local/bin/helm
       rm -rf helm.tar.gz 
       echo 'alias h=helm' >> /home/vagrant/.bashrc
 
       # Install Golang
-      GO_VERSION="1.21.5"
       curl -o go.tar.gz -SLf https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
       sudo tar -C /usr/local -xzf go.tar.gz
       echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/vagrant/.bashrc
       echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
-      rm go.tar.gz
-
+      rm -rf go.tar.gz
+      
       cat << 'EOF' >> /home/vagrant/.bashrc
       function git_branch {
           if git rev-parse --git-dir > /dev/null 2>&1; then
